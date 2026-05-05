@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">                    
+    <head>
+        <meta charset="UTF-8"> 
+        <meta http-equiv="X-UA-compatible" content="IE-edge">
+        <title>Page Title</title>
+        <meta name="viewport" content="width=device-width">
+        <script src="main.js" defer></script>
+        <script src="gl-matrix-min.js"></script>
+        <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    </head>
+    <body>
+        <!-- <h1>WebGL!</h1> -->
+        <canvas></canvas>
+        <script>
+            const _c = document.getElementsByTagName('canvas')[0];
+            _c.width = window.innerWidth;
+            _c.height = window.innerHeight;
+        </script>
+    </body>
+</html>
