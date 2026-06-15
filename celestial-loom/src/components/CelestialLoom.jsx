@@ -45,7 +45,7 @@ export function CelestialLoom({ isEngineStarted = false }) {
 
     // Load music
     const audioLoader = new THREE.AudioLoader()
-    audioLoader.load('../src/assets/Celestial Loom.m4a', (buffer) => {
+    audioLoader.load('/Celestial Loom.m4a', (buffer) => {
       sound.setBuffer(buffer)
       sound.setLoop(true)
       sound.setVolume(0.3)
