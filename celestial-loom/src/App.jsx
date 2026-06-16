@@ -37,8 +37,8 @@ export default function App() {
         <CelestialLoom isEngineStarted={isActive} />
 
         <EffectComposer>
-          <Bloom intensity={1.5} luminanceThreshold={0.1} luminanceSmoothing={0.8} />
-          <ChromaticAberration offset={[0.0015, 0.0015]} />
+          <Bloom intensity={1.5} luminanceThreshold={0.1} luminanceSmoothing={5.0} />
+          <ChromaticAberration offset={[0.002, 0.002]} />
         </EffectComposer>
       </Canvas>
       <Keys isEngineStarted={isActive} />
