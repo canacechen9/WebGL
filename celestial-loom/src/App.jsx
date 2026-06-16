@@ -6,18 +6,43 @@ import { Keys } from './components/keys'
 
 export default function App() {
 
+  const [audioData, setAudioData] = useState({ bass: 0, mids: 0 })
   const [isActive, setIsActive] = useState(false)
+  const analyserRef = useRef(null)
+  const dataArrayRef = useRef(null)
 
-  // Forces the mobile browser's hardware to play sound even when on silent mode
   const setupAudio = async () => {
-
     const context = new (window.AudioContext || window.webkitAudioContext)()
-    const audioBypass = new Audio("https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg")
-    audioBypass.crossOrigin = "anonymous"
+    const analyser = context.createAnalyser()
+    analyser.fftSize = 256
+
+    // Ambient sound stream anchor
+    const audio = new Audio("https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg")
+    audio.crossOrigin = "anonymous"
+    audio.loop = true
+
+    const source = context.createMediaElementSource(audio)
+    source.connect(analyser)
+    analyser.connect(context.destination)
+
+    analyserRef.current = analyser
+    dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount)
     await context.resume()
-    audioBypass.play()
+    audio.play()
     setIsActive(true)
-  }
+
+    const scanFrequencies = () => {
+    if (!analyserRef.current) return
+    analyserRef.current.getByteFrequencyData(dataArrayRef.current)
+    setAudioData({
+    bass: dataArrayRef.current[4] / 255,
+    mids: dataArrayRef.current[35] / 255
+    })
+
+    requestAnimationFrame(scanFrequencies)
+    }
+    scanFrequencies()
+  } 
   
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -28,7 +53,7 @@ export default function App() {
         }}>
           <h1 style={{ color: '#eab95f', marginBottom: '20px', letterSpacing: '0.1em', fontSize: '2rem', textShadow: '0px 4px 12px rgba(0, 0, 0, 0.95), 0px 0px 25px rgba(0, 0, 0, 0.7)'}}>CELESTIAL LOOM // 浑天</h1>
           <button 
-            //onClick={setupAudio}
+            onClick={setupAudio}
             // onClick={() => {
             //   // CREATE A NATIVE AUDIO ELEMENT IN AIR TO TRICK THE PHONE
             //   const audioBypass = new Audio();
@@ -48,7 +73,7 @@ export default function App() {
             //   }
             //   setIsActive(true)
             // }}
-            onClick={() => setIsActive(true)}
+            //onClick={() => setIsActive(true)}
             style={{
               padding: '12px 24px', background: 'transparent', border: '1px solid #e5a93c',
               color: '#eab95f', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem',
