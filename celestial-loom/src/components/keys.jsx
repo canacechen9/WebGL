@@ -59,7 +59,7 @@ const styles = {
   },
   legendPanel: {
     marginTop: '12px',
-    width: '60%', // Thinned down panel width for minimalism
+    width: '60%', 
     background: 'rgba(5, 5, 5, 0.15)',
     padding: '16px',
     boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
