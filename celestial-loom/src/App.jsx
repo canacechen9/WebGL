@@ -8,12 +8,14 @@ export default function App() {
 
   const [isActive, setIsActive] = useState(false)
 
+  // Forces the mobile browser's hardware to play sound even when on silent mode
   const setupAudio = async () => {
 
     const context = new (window.AudioContext || window.webkitAudioContext)()
-    const audioBypass = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==")
+    const audioBypass = new Audio("https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg")
+    audioBypass.crossOrigin = "anonymous"
     await context.resume()
-    audio.play()
+    audioBypass.play()
     setIsActive(true)
   }
   
@@ -46,7 +48,7 @@ export default function App() {
             //   }
             //   setIsActive(true)
             // }}
-            //onClick={() => setIsActive(true)}
+            onClick={() => setIsActive(true)}
             style={{
               padding: '12px 24px', background: 'transparent', border: '1px solid #e5a93c',
               color: '#eab95f', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem',
