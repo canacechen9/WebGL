@@ -39,7 +39,7 @@ export function CelestialLoom({ isEngineStarted = false }) {
   useEffect(() => {
     if (!isEngineStarted) return
 
-    const listener = new THREE.AudioListener(window.sharedAudioContext)
+    const listener = new THREE.AudioListener()
     camera.add(listener)
 
     const sound = new THREE.Audio(listener)
