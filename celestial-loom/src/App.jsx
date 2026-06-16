@@ -2,46 +2,12 @@ import { useState, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing'
 import { CelestialLoom } from './components/CelestialLoom'
+import { Keys } from './components/keys'
 
 export default function App() {
-  const [audioData, setAudioData] = useState({ bass: 0, mids: 0 })
+
   const [isActive, setIsActive] = useState(false)
-  const analyserRef = useRef(null)
-  const dataArrayRef = useRef(null)
-
-  const setupAudio = async () => {
-    const context = new (window.AudioContext || window.webkitAudioContext)()
-    const analyser = context.createAnalyser()
-    analyser.fftSize = 256
-    
-    // Ambient sound stream anchor
-    const audio = new Audio("https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg")
-    audio.crossOrigin = "anonymous"
-    audio.loop = true
-
-    const source = context.createMediaElementSource(audio)
-    source.connect(analyser)
-    analyser.connect(context.destination)
-
-    analyserRef.current = analyser
-    dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount)
-    
-    await context.resume()
-    audio.play()
-    setIsActive(true)
-
-    const scanFrequencies = () => {
-      if (!analyserRef.current) return
-      analyserRef.current.getByteFrequencyData(dataArrayRef.current)
-      setAudioData({
-        bass: dataArrayRef.current[4] / 255,
-        mids: dataArrayRef.current[35] / 255
-      })
-      requestAnimationFrame(scanFrequencies)
-    }
-    scanFrequencies()
-  }
-
+  
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       {!isActive && (
@@ -51,14 +17,15 @@ export default function App() {
         }}>
           <h1 style={{ color: '#eab95f', marginBottom: '20px', letterSpacing: '0.1em', fontSize: '2rem', textShadow: '0px 4px 12px rgba(0, 0, 0, 0.95), 0px 0px 25px rgba(0, 0, 0, 0.7)'}}>CELESTIAL LOOM // 浑天</h1>
           <button 
-            onClick={setupAudio}
+            //onClick={setupAudio}
+            onClick={() => setIsActive(true)}
             style={{
               padding: '12px 24px', background: 'transparent', border: '1px solid #e5a93c',
               color: '#eab95f', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem',
               boxShadow: '0px 6px 20px rgba(0, 0, 0, 0.95), inset 0px 0px 10px rgba(0, 0, 0, 0.5)'
             }}
           >
-            INITIALIZE ENGINE
+            INITIALISE ENGINE
           </button>
         </div>
       )}
@@ -74,6 +41,7 @@ export default function App() {
           <ChromaticAberration offset={[0.0015, 0.0015]} />
         </EffectComposer>
       </Canvas>
+      <Keys isEngineStarted={isActive} />
     </div>
   )
 }

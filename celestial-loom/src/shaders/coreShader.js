@@ -153,7 +153,7 @@ export const CoreVertexShader = `
 
     // When uOrderProgress is 0 (Menu open), dim the cluster to 20% brightness.
     // As it approaches 1.0 (Engine started), fade it up to 100% full radiance.
-    float menuVignetteDim = mix(0.2 , 1.0, uOrderProgress);
+    float menuVignetteDim = mix(0.3 , 1.0, uOrderProgress);
     vColor = reactiveColor * menuVignetteDim;
 
     vec4 mvPosition = modelViewMatrix * vec4(mixedPosition, 1.0);
@@ -176,14 +176,15 @@ export const CoreFragmentShader = `
     if (dist > 0.5) discard;
     
     // Default transparency and soft edge
-    float alpha = smoothstep(0.5, 0.1, dist) * 0.8;
+    //float alpha = smoothstep(0.5, 0.1, dist) * 0.8;
+    float alpha = smoothstep(0.5, 0.45, dist) * 0.23;
 
     vec3 finalColor = vColor;
 
     // Alignment glowing wave
     if (uAlignmentGlow > 0.01) {
-      float waveEdge = smoothstep(uWaveRadius + 0.3, uWaveRadius, vRadius) * smoothstep(uWaveRadius - 0.3, uWaveRadius, vRadius);
-      vec3 waveGlowColor = vec3(1.0, 0.95, 0.9) * waveEdge * uAlignmentGlow * 2.5;
+      float waveEdge = smoothstep(uWaveRadius + 0.2, uWaveRadius, vRadius) * smoothstep(uWaveRadius - 0.2, uWaveRadius, vRadius);
+      vec3 waveGlowColor = vec3(1.0, 0.95, 0.9) * waveEdge * uAlignmentGlow;
       finalColor += waveGlowColor;
       alpha += waveEdge * uAlignmentGlow;
     }

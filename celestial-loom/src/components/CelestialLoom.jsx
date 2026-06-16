@@ -13,6 +13,8 @@ export function CelestialLoom({ isEngineStarted = false }) {
   
   const analyserRef = useRef(null)
   const audioTrackRef = useRef(null)
+  const lowpassFilterRef = useRef(null)
+  const echoRef = useRef(null)
 
   const targetMouseRot = useRef(new THREE.Vector2(0, 0))
   const currentMouseRot = useRef(new THREE.Vector2(0, 0))
@@ -52,6 +54,41 @@ export function CelestialLoom({ isEngineStarted = false }) {
       sound.setPlaybackRate(0.96)
       sound.play()
 
+      // WEB AUDIO API PIPELINE CUSTOMISATION
+      const ctx = listener.context // Extract the native browser AudioContext
+  
+      // Initialize the Lowpass Filter (Muffled Space)
+      const lowpass = ctx.createBiquadFilter()
+      lowpass.type = 'lowpass'
+      lowpass.frequency.setValueAtTime(22000, ctx.currentTime) // Open wide by default
+      lowpassFilterRef.current = lowpass
+
+      // Create Delay and Feedback Nodes (Echo Space)
+      const delayNode = ctx.createDelay()
+      delayNode.delayTime.setValueAtTime(0.25, ctx.currentTime) // 250ms echo intervals
+      
+      const feedbackGain = ctx.createGain()
+      feedbackGain.gain.setValueAtTime(0.4, ctx.currentTime) // Echo tail decay decay rate
+
+      const wetEchoVolume = ctx.createGain()
+      wetEchoVolume.gain.setValueAtTime(0.0, ctx.currentTime) // Silenced by default
+      echoRef.current = wetEchoVolume
+
+      // Chain the Echo loop together (Delay -> Feedback -> back to Delay)
+      delayNode.connect(feedbackGain)
+      feedbackGain.connect(delayNode)
+
+      // Connect filter output down to the echo subsystem
+      lowpass.connect(delayNode)
+      delayNode.connect(wetEchoVolume)
+
+      // Tell Three.js to use the lowpass as its master filter chain.
+      // Forces Three.js to route the internal source and analyzer downstream through it.
+      sound.setFilter(lowpass)
+
+      // Connect independent Echo channel directly into the master speakers speaker output
+      wetEchoVolume.connect(sound.getOutput())
+
       analyserRef.current = new THREE.AudioAnalyser(sound, 256)
     }, 
     (progress) => console.log(`Loading audio: ${Math.round((progress.loaded / progress.total) * 100)}%`),
@@ -63,7 +100,7 @@ export function CelestialLoom({ isEngineStarted = false }) {
     }
   }, [isEngineStarted, camera])
 
-  // ARRAYS AND BUFFERS MEMOIZATION
+  // ARRAYS AND BUFFERS MEMOISATION
     const [
         positions, 
         crystalPositions, // Target organized ring/core geometric positions (uOrderProgress = 1)
@@ -189,9 +226,26 @@ export function CelestialLoom({ isEngineStarted = false }) {
     const p = globalProgress.current
 
     // CORE COMPRESSION LOGIC (Lattice Compression State)
-    const targetHold = (isEngineStarted && isHolding) ? 1.0 : 0.0
+    // Calculate distance from world center (0,0,0) to where the mouse ray hits the 3D plane
+    const distanceFromCenter = mouse3D.current.length()
+    const coreRadiusLimit = 0.55 // Strictly mapping to your coreCount boundary geometry limits
+    // Only trigger holding state if the engine is active AND the user is clicking directly on the core sphere
+    const isTargetingCore = isHolding && (distanceFromCenter <= coreRadiusLimit)
+    const targetHold = (isEngineStarted && isTargetingCore) ? 1.0 : 0.0
     const lerpSpeed = isHolding ? 0.04 : 0.12 
     holdProgress.current = THREE.MathUtils.lerp(holdProgress.current, targetHold, lerpSpeed)
+    const h = holdProgress.current
+
+    // Animate audio filter effect when press and hold on the core 
+    if (lowpassFilterRef.current && echoRef.current) {
+      // Linear transition mapping: Cutoff plunges down from 22,000Hz to 650Hz based on compression state
+      const targetFrequency = THREE.MathUtils.mapLinear(h, 0.0, 1.0, 22000, 650)
+      lowpassFilterRef.current.frequency.value = targetFrequency
+
+      // Scale volume gain up from 0.0 (silent) to 0.6 (echoing ambient overlay)
+      const targetEchoVolume = THREE.MathUtils.mapLinear(h, 0.0, 1.0, 0.0, 0.6)
+      echoRef.current.gain.value = targetEchoVolume
+    }
 
     // INTERACTIVE GYROSCOPIC MOUSE ROTATION
     targetMouseRot.current.set(mouse.x * Math.PI * 0.6, -mouse.y * Math.PI * 0.6)
