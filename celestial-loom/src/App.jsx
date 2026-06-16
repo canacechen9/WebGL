@@ -27,6 +27,14 @@ export default function App() {
               
               // Play the silent file immediately within the user gesture context
               audioBypass.play()
+
+              if (window.AudioContext || window.webkitAudioContext) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const tempCtx = new AudioCtx();
+                if (tempCtx.state === 'suspended') {
+                  tempCtx.resume();
+                }
+              }
               setIsActive(true)
             }}
             //onClick={() => setIsActive(true)}
